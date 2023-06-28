@@ -1,0 +1,36 @@
+# Docker compose: сборка проекта
+docker compose up --build
+
+docker compose exec backend python -m manage migrate
+
+docker compose exec backend python -m manage collectstatic
+docker compose exec -it backend bash
+docker compose exec backend cp -r /app/collected_static/. /backend_static/static/
+
+docker compose down -v
+
+
+# Деплой: публикация проекта в Docker на сервере
+docker build -t idull/taski_backend:latest backend/
+docker build -t idull/taski_frontend:latest frontend/
+docker build -t idull/taski_gateway:latest gateway/
+
+docker push idull/taski_backend:latest
+docker push idull/taski_frontend:latest
+docker push idull/taski_gateway:latest
+
+scp docker-compose.production.yml andrey@51.250.69.120:/home/andrey/taski/docker-compose.production.yml
+scp .env andrey@51.250.69.120:/home/andrey/taski/.env
+
+sudo docker compose -f docker-compose.production.yml up -d
+
+sudo docker compose -f docker-compose.production.yml ps
+
+sudo docker compose -f docker-compose.production.yml exec backend python -m manage migrate
+
+sudo docker compose -f docker-compose.production.yml exec backend python -m manage collectstatic
+sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
+
+sudo docker compose -f docker-compose.production.yml stop
+
+docker compose logs --follow backend
