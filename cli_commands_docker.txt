@@ -1,0 +1,34 @@
+docker build -t idull/taski_backend:latest backend/
+docker build -t idull/taski_frontend:latest frontend/
+
+docker login
+docker login -u idull
+
+docker push idull/taski_backend:latest
+docker push idull/taski_frontend:latest
+
+docker network create django-network
+
+docker volume create pg_data
+
+docker run --name db \
+           --net django-network \
+           --env-file .env \
+           -v pg_data:/var/lib/postgresql/data \
+           postgres:13.10
+
+# Присоединить к сети django-network контейнер db
+docker network connect django-network db
+
+docker run --name taski_backend_container \
+           --net django-network \
+           --env-file .env \
+           -p 8000:8000 \
+           idull/taski_backend
+
+docker exec taski_backend_container python -m manage migrate
+
+docker exec -it db psql -U django -d django
+
+docker image ls -f "dangling=true" -q
+docker image rm $(docker image ls -f "dangling=true" -q)

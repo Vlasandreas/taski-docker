@@ -1,0 +1,3 @@
+docker build -t taski_frontend .
+
+docker run --name taski_frontend_container -p 8000:8000 --rm taski_frontend

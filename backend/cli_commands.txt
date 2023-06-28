@@ -1,0 +1,22 @@
+docker build -t taski_backend .
+
+docker volume create sqlite_data
+
+docker run --name taski_backend_container \
+           -p 8000:8000 \
+           -v sqlite_data:/data \
+           --rm \
+           taski_backend
+
+docker exec -it taski_backend_container bash
+docker exec taski_backend_container python -m manage migrate
+
+docker container start taski_backend_container
+docker container stop taski_backend_container
+docker ps -a
+docker container ls -a
+docker container rm taski_backend_container
+
+docker images
+docker image ls
+docker image rm nginx
